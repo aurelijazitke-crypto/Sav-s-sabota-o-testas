@@ -1,0 +1,751 @@
+<!doctype html>
+<html lang="lt">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Savęs Sabotažo Testas</title>
+  <meta name="description" content="10 klausimų testas tavo gynybinėms programoms atpažinti." />
+  <style>
+    :root{
+      --bg:#f8fafc;
+      --card:#ffffff;
+      --text:#0f172a;
+      --muted:#64748b;
+      --border:#e2e8f0;
+      --soft:#f1f5f9;
+      --indigo:#4f46e5;
+      --indigo2:#4338ca;
+      --black:#0b1220;
+      --shadow: 0 20px 60px rgba(2,6,23,.12);
+      --shadow2: 0 14px 40px rgba(2,6,23,.10);
+      --radiusXL: 32px;
+      --radiusXXL: 40px;
+    }
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Sans", "Apple Color Emoji","Segoe UI Emoji";
+      background: var(--bg);
+      color: var(--text);
+    }
+    .wrap{
+      min-height:100svh;
+      padding: 40px 16px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+    .container{
+      width:100%;
+      max-width: 760px;
+    }
+    .card{
+      background:var(--card);
+      border:1px solid var(--border);
+      box-shadow: var(--shadow);
+      border-radius: var(--radiusXXL);
+      overflow:hidden;
+    }
+    .p-12{ padding:48px; }
+    .center{ text-align:center; }
+    .title{
+      font-size: 30px;
+      letter-spacing:-.02em;
+      margin: 0 0 12px 0;
+      font-weight: 900;
+    }
+    .subtitle{
+      margin:0 0 28px 0;
+      color: var(--muted);
+      font-size: 18px;
+      line-height: 1.5;
+    }
+    .badgeIcon{
+      width:64px; height:64px;
+      border-radius: 18px;
+      background: var(--indigo);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      margin: 0 auto 22px auto;
+      box-shadow: 0 12px 30px rgba(79,70,229,.25);
+      color:white;
+      font-size: 28px;
+      font-weight: 900;
+    }
+    .btn{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:10px;
+      width:100%;
+      padding: 18px 18px;
+      border-radius: 18px;
+      border: 0;
+      cursor:pointer;
+      font-weight: 900;
+      font-size: 18px;
+      transition: .15s ease;
+      user-select:none;
+    }
+    .btnPrimary{
+      background: var(--black);
+      color: white;
+    }
+    .btnPrimary:hover{ filter: brightness(1.06); }
+    .btnIndigo{
+      background: var(--indigo);
+      color:#fff;
+      box-shadow: 0 14px 32px rgba(79,70,229,.25);
+    }
+    .btnIndigo:hover{ background: var(--indigo2); }
+    .btnGhost{
+      background: transparent;
+      color: var(--muted);
+      padding: 12px 10px;
+      font-size: 14px;
+      font-weight: 800;
+      width:auto;
+    }
+    .btnGhost:hover{ color: var(--text); }
+    .btnGhost:disabled{
+      color:#cbd5e1;
+      cursor:not-allowed;
+    }
+    .topbar{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      padding: 0 8px 14px 8px;
+    }
+    .progress{
+      width: 140px;
+      height: 6px;
+      background: #e2e8f0;
+      border-radius: 999px;
+      overflow:hidden;
+    }
+    .progress > div{
+      height:100%;
+      width:0%;
+      background: #6366f1;
+      transition: width .25s ease;
+    }
+    .qcard{
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radiusXL);
+      box-shadow: var(--shadow2);
+      padding: 38px;
+    }
+    .qtitle{
+      margin:0 0 22px 0;
+      font-size: 22px;
+      line-height: 1.35;
+      font-weight: 900;
+      letter-spacing: -.01em;
+    }
+    .options{
+      display:flex;
+      flex-direction:column;
+      gap: 12px;
+    }
+    .opt{
+      display:flex;
+      align-items:flex-start;
+      gap: 14px;
+      width:100%;
+      text-align:left;
+      padding: 16px 16px;
+      border-radius: 16px;
+      border: 2px solid #f1f5f9;
+      background: #fff;
+      cursor:pointer;
+      transition: .15s ease;
+    }
+    .opt:hover{
+      border-color: rgba(79,70,229,.70);
+      background: rgba(79,70,229,.06);
+    }
+    .dot{
+      margin-top: 6px;
+      width:8px; height:8px;
+      border-radius:999px;
+      background: rgba(99,102,241,.25);
+      flex: 0 0 auto;
+    }
+    .opt span{
+      color: #334155;
+      font-weight: 800;
+      line-height: 1.35;
+    }
+    .hidden{ display:none !important; }
+
+    .resultHeader{
+      background: var(--black);
+      color:#fff;
+      padding: 40px;
+      text-align:center;
+    }
+    .kicker{
+      font-size: 10px;
+      letter-spacing: .22em;
+      text-transform: uppercase;
+      color: rgba(99,102,241,.85);
+      font-weight: 900;
+      margin: 0 0 8px 0;
+    }
+    .rTitle{
+      font-size: 34px;
+      letter-spacing:-.02em;
+      font-weight: 950;
+      margin: 0 0 8px 0;
+    }
+    .rSecondary{
+      font-size: 12px;
+      color: rgba(199,210,254,.95);
+      margin:0;
+      font-weight: 800;
+    }
+    .resultBody{ padding: 40px; }
+    .quote{
+      padding: 18px;
+      background: rgba(79,70,229,.08);
+      border: 1px solid rgba(79,70,229,.15);
+      border-radius: 18px;
+      text-align:center;
+      font-style: italic;
+      font-weight: 800;
+      color: #0f172a;
+      margin: 0 0 22px 0;
+    }
+    .box{
+      padding: 18px;
+      background: var(--soft);
+      border-radius: 18px;
+      margin-bottom: 12px;
+    }
+    .label{
+      font-size: 10px;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+      color: #94a3b8;
+      font-weight: 900;
+      margin:0 0 8px 0;
+    }
+    .box p{
+      margin:0;
+      color:#334155;
+      font-size: 14px;
+      line-height: 1.55;
+    }
+    .reflection{
+      padding: 18px;
+      background: #fff;
+      border-radius: 18px;
+      border: 1px solid rgba(79,70,229,.20);
+      box-shadow: 0 8px 20px rgba(2,6,23,.06);
+      margin-top: 12px;
+    }
+    .reflection .label{ color: rgba(99,102,241,.95); }
+    .reflection p{
+      margin:0;
+      font-weight: 900;
+      font-style: italic;
+      color:#0f172a;
+    }
+    .sectionTitle{
+      font-size: 12px;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+      color: #94a3b8;
+      font-weight: 900;
+      margin: 22px 0 10px 8px;
+    }
+    .step{
+      display:flex;
+      gap: 14px;
+      padding: 16px;
+      background: #fff;
+      border-radius: 18px;
+      border: 1px solid #f1f5f9;
+      margin-bottom: 10px;
+    }
+    .num{
+      width:40px; height:40px;
+      border-radius: 14px;
+      background: var(--indigo);
+      color:#fff;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-weight: 950;
+      flex: 0 0 auto;
+    }
+    .step h4{
+      margin:0 0 4px 0;
+      font-weight: 950;
+      color:#0f172a;
+      font-size: 14px;
+    }
+    .step p{
+      margin:0;
+      color:#64748b;
+      font-size: 13px;
+      line-height: 1.5;
+      font-weight: 700;
+    }
+    .footerActions{
+      border-top: 1px solid #f1f5f9;
+      margin-top: 18px;
+      padding-top: 18px;
+      display:flex;
+      flex-direction:column;
+      gap: 10px;
+    }
+    .copied{
+      text-align:center;
+      color: #059669;
+      font-weight: 900;
+      font-size: 12px;
+      margin:0;
+    }
+    @media (max-width: 520px){
+      .p-12{ padding: 34px; }
+      .qcard{ padding: 26px; }
+      .resultHeader{ padding: 28px; }
+      .resultBody{ padding: 26px; }
+      .rTitle{ font-size: 28px; }
+      .title{ font-size: 26px; }
+      .subtitle{ font-size: 16px; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <div class="container">
+
+      <section id="screen-intro" class="card p-12 center">
+        <div class="badgeIcon" aria-hidden="true">⚡</div>
+        <h1 class="title">Atrask savo vidinį sabotažą</h1>
+        <p class="subtitle">10 klausimų testas tavo gynybinėms programoms atpažinti.</p>
+        <button id="btn-start" class="btn btnPrimary">Pradėti</button>
+      </section>
+
+      <section id="screen-test" class="hidden">
+        <div class="topbar">
+          <button id="btn-back" class="btnGhost" type="button">← Atgal</button>
+          <div class="progress" aria-label="Progresas">
+            <div id="progress-bar"></div>
+          </div>
+        </div>
+
+        <div class="qcard">
+          <h2 id="question-text" class="qtitle"></h2>
+          <div id="options" class="options"></div>
+        </div>
+      </section>
+
+      <section id="screen-result" class="card hidden">
+        <div class="resultHeader">
+          <p class="kicker">Jūsų tipas</p>
+          <h1 id="result-title" class="rTitle"></h1>
+          <p id="result-secondary" class="rSecondary hidden"></p>
+        </div>
+        <div class="resultBody">
+          <div id="result-quote" class="quote"></div>
+
+          <div class="box">
+            <p class="label">Kodėl taip veikia</p>
+            <p id="result-psychology"></p>
+          </div>
+
+          <div class="box">
+            <p class="label">Kasdienis poveikis</p>
+            <p id="result-impact"></p>
+          </div>
+
+          <div class="reflection">
+            <p class="label">Refleksija</p>
+            <p id="result-reflection"></p>
+          </div>
+
+          <div class="sectionTitle">Rekomendacijos</div>
+          <div id="result-steps"></div>
+
+          <div class="box" style="margin-top:14px;">
+            <p class="label">Gauk platesnę analizę el. paštu</p>
+            <p style="margin:0 0 10px 0; color:#334155; font-size:14px; line-height:1.55; font-weight:700;">
+              Įvesk el. paštą ir atsiųsiu išsamesnį paaiškinimą bei kryptį pagal tavo tipą.
+            </p>
+
+            <input id="email-input" type="email" placeholder="tavo@email.com"
+              style="width:100%; padding:14px; border-radius:14px; border:1px solid #e2e8f0; font-weight:800; outline:none;" />
+
+            <button id="btn-email" class="btn btnPrimary" type="button" style="margin-top:10px;">
+              Gauti analizę el. paštu
+            </button>
+
+            <p id="email-msg" class="copied hidden" style="color:#0f172a; margin-top:10px;"></p>
+          </div>
+
+          <div class="footerActions">
+            <button id="btn-share" class="btn btnIndigo" type="button">🔗 Pasidalinti rezultatu</button>
+            <p id="copied-msg" class="copied hidden">Nukopijuota! ✅</p>
+            <button id="btn-restart" class="btnGhost" type="button">↻ Atlikti iš naujo</button>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </div>
+
+  <script>
+    const ARCHETYPES = {
+      PERFECTIONIST: {
+        id: 'PERFECTIONIST',
+        title: 'Perfekcionistas',
+        description: 'Jūs painiojate savo vertę su savo pasiekimais. Jums atrodo, kad klaida lygi asmeninei katastrofai.',
+        psychology: 'Jūsų pasąmonė naudoja tobulumą kaip apsaugą nuo kritikos. Jei viskas bus idealu, niekas negalės jūsų užgauti ar pasmerkti.',
+        dailyImpact: 'Nuolatinis nuovargis, perdegimas ir sunkumas užbaigti projektus, nes jie niekada neatrodo pakankamai geri.',
+        steps: [
+          { title: '80% taisyklė', text: 'Sąmoningai nuspręskite atlikti užduotį „gerai“, o ne „tobulai“.' },
+          { title: 'Klaidų de-dramatizavimas', text: 'Klauskite savęs: „Kas baisiausio nutiks po 5 metų, jei čia suklysiu?“' },
+          { title: 'Proceso šventimas', text: 'Apdovanokite save už pastangas, o ne tik už rezultatą.' }
+        ],
+        reflection: 'Kuo aš būčiau, jei nebeturėčiau savo pasiekimų?'
+      },
+      PROCRASTINATOR: {
+        id: 'PROCRASTINATOR',
+        title: 'Emocinis Atidėliotojas',
+        description: 'Atidėliojimas jums yra būdas reguliuoti nemalonias emocijas – baimę ar nesaugumą.',
+        psychology: 'Tai gynyba nuo vertinimo. Jei nespėjate dėl laiko trūkumo, galite teisintis laiku, o ne kompetencija.',
+        dailyImpact: 'Chroniškas streso jausmas, neišnaudotas potencialas ir „paskutinės minutės“ panika.',
+        steps: [
+          { title: '5 minučių kontraktas', text: 'Pasižadėkite dirbti tik 5 minutes.' },
+          { title: 'Emocijų įvardijimas', text: 'Paklauskite savęs: „Kokios emocijos dabar vengiu?“' },
+          { title: 'Skaidymas', text: 'Skaidykite užduotis į mikroskopinius etapus.' }
+        ],
+        reflection: 'Nuo ko aš bėgu pasinerdamas į smulkmenas?'
+      },
+      CRITIC: {
+        id: 'CRITIC',
+        title: 'Vidinis Nuvertintojas',
+        description: 'Jūs esate savo didžiausias priešas. Jūsų pasiekimai jums atrodo lyg atsitiktinumai.',
+        psychology: 'Jūs nuvertinate save pirmas, kad kitiems liktų mažiau erdvės jus nuvilti ar užgauti.',
+        dailyImpact: 'Sunkumas priimti komplimentus, Imposterio sindromas ir nuolatinė savikritika.',
+        steps: [
+          { title: 'Faktų auditas', text: 'Užrašykite 3 įrodymus, kad jūsų sėkmė nėra atsitiktinė.' },
+          { title: 'Pagyrimo priėmimas', text: 'Atsakykite tik „Ačiū“ be jokių papildomų paaiškinimų.' },
+          { title: 'Draugo balsas', text: 'Kalbėkite su savimi taip, kaip su geriausiu draugu.' }
+        ],
+        reflection: 'Kieno balsu iš tiesų kalba mano vidinis kritikas?'
+      },
+      PLEASER: {
+        id: 'PLEASER',
+        title: 'Santykių Gelbėtojas',
+        description: 'Jūsų vertė priklauso nuo kitų pritarimo. Sabotažuojate save pildydami svetimus lūkesčius.',
+        psychology: 'Meilę matote kaip užsitarnaujamą valiutą. Bijote konfliktų, nes jie asocijuojasi su visišku atstūmimu.',
+        dailyImpact: 'Vidinis pyktis, savo poreikių ignoravimas ir emocinis išsekimas.',
+        steps: [
+          { title: 'Pauzės praktika', text: 'Sakykite: „Man reikia pagalvoti“, užuot iškart sutikę.' },
+          { title: 'Mažos ribos', text: 'Išmokite pasakyti „ne“ bent vienam prašymui per dieną.' },
+          { title: 'Ryto rutina', text: 'Rytą pradėkite nuo užduoties SAU, o ne kitiems.' }
+        ],
+        reflection: 'Ką aš daryčiau, jei man neberūpėtų kitų nuomonė?'
+      }
+    };
+
+    const QUESTIONS = [
+      { id: 1, text: "Kaip reaguojate į nuoširdų pagyrimą už darbą?", options: [
+        { text: "Iškart jį nuvertinu (pvz., „tiesiog pasisekė“).", type: 'CRITIC' },
+        { text: "Galvoju: „Malonu, bet jie nematė mano klaidų“.", type: 'PERFECTIONIST' },
+        { text: "Jaučiuosi lyg būčiau juos apgavęs (Imposterio sindromas).", type: 'CRITIC' },
+        { text: "Džiaugiuosi, nes tai reiškia, kad esu reikalingas.", type: 'PLEASER' },
+        { text: "Jaučiu spaudimą kitą kartą padaryti dar geriau.", type: 'PROCRASTINATOR' }
+      ]},
+      { id: 2, text: "Ką darote prieš pradedant sunkų projektą?", options: [
+        { text: "Ruošiuosi amžinai, nes bijau nepadaryti tobulai.", type: 'PERFECTIONIST' },
+        { text: "Užsiimu smulkmenomis, kad tik nereikėtų pradėti pagrindinio darbo.", type: 'PROCRASTINATOR' },
+        { text: "Iškart randu dešimt priežasčių, kodėl nepavyks.", type: 'CRITIC' },
+        { text: "Klausiu kitų nuomonės, kad pasijusčiau saugiau.", type: 'PLEASER' }
+      ]},
+      { id: 3, text: "Jūsų reakcija į nedidelę klaidą:", options: [
+        { text: "Graužiu save kelias dienas.", type: 'PERFECTIONIST' },
+        { text: "Manau, kad tai įrodo mano nesugebėjimą.", type: 'CRITIC' },
+        { text: "Apsimetu, kad nieko neįvyko, ir užsiimu kuo kitu.", type: 'PROCRASTINATOR' },
+        { text: "Atsiprašinėju visų, net jei klaida niekam nepakenkė.", type: 'PLEASER' }
+      ]},
+      { id: 4, text: "Kaip jaučiatės sakydami „ne“?", options: [
+        { text: "Sutinku, nors viduje pykstu, nes bijau nuvilti.", type: 'PLEASER' },
+        { text: "Pasakau „ne“, bet po to visą laiką save graužiu.", type: 'CRITIC' },
+        { text: "Vengiu atsakymo iki paskutinės akimirkos.", type: 'PROCRASTINATOR' },
+        { text: "Sutinku, nes manau, kad privalau viską suspėti idealiai.", type: 'PERFECTIONIST' }
+      ]},
+      { id: 5, text: "Laisvas laikas be įsipareigojimų jums sukelia:", options: [
+        { text: "Kaltės jausmą, kad nesu produktyvus.", type: 'PERFECTIONIST' },
+        { text: "Pasimetimą – nežinau, ko noriu aš pats.", type: 'PLEASER' },
+        { text: "Norą „bukai“ naršyti internete, kad nereikėtų galvoti.", type: 'PROCRASTINATOR' },
+        { text: "Mintis apie tai, kiek laiko jau esu iššvaistęs.", type: 'CRITIC' }
+      ]},
+      { id: 6, text: "Matydami svetimą sėkmę, jūs:", options: [
+        { text: "Iškart lyginu save su jais ir jaučiuosi prastesnis.", type: 'CRITIC' },
+        { text: "Analizuoju jų klaidas, kad pasijusčiau „tobulesnis“.", type: 'PERFECTIONIST' },
+        { text: "Jaučiuosi kaltas, kad aš vis dar nieko nepasiekiau.", type: 'PROCRASTINATOR' },
+        { text: "Galvoju, kaip galėčiau jiems pasitarnauti.", type: 'PLEASER' }
+      ]},
+      { id: 7, text: "Kaip priimate konstruktyvią kritiką?", options: [
+        { text: "Ginuosi, nes kritika man reiškia, kad esu „blogas“.", type: 'PERFECTIONIST' },
+        { text: "Sutinku, nes giliai viduje manau, kad esu nieko vertas.", type: 'CRITIC' },
+        { text: "Ignoruoju, nes tai kelia per didelį stresą.", type: 'PROCRASTINATOR' },
+        { text: "Labai susisieloju ir bandau „ištaisyti“ kitų nuomonę.", type: 'PLEASER' }
+      ]},
+      { id: 8, text: "Kai esate pervargęs, bet darbai nelaukia:", options: [
+        { text: "Dirbu per jėgą, nes rezultatas privalo būti idealus.", type: 'PERFECTIONIST' },
+        { text: "Nusprendžiu „pailsėti“ 5 minutes, kurios virsta 3 valandomis.", type: 'PROCRASTINATOR' },
+        { text: "Dirbu pykdamas ant savęs, koks esu lėtas.", type: 'CRITIC' },
+        { text: "Dirbu, nes negaliu nuvilti tų, kurie laukia.", type: 'PLEASER' }
+      ]},
+      { id: 9, text: "Svarbus sprendimas gyvenime:", options: [
+        { text: "Laukiu „tinkamo“ momento, kuris niekada neateina.", type: 'PROCRASTINATOR' },
+        { text: "Ieškau tobulo varianto, kol visai nebegaliu nuspręsti.", type: 'PERFECTIONIST' },
+        { text: "Leidžiu kitiems nuspręsti už mane.", type: 'PLEASER' },
+        { text: "Bijau, kad bet koks pasirinkimas bus klaidingas.", type: 'CRITIC' }
+      ]},
+      { id: 10, text: "Koks jūsų požiūris į ateities tikslus?", options: [
+        { text: "Privalau pasiekti aukštumų, kitaip mano gyvenimas bevertis.", type: 'PERFECTIONIST' },
+        { text: "Ateitis baugina, geriau apie ją per daug negalvoti.", type: 'PROCRASTINATOR' },
+        { text: "Nemanau, kad esu vertas kažko ypatingo.", type: 'CRITIC' },
+        { text: "Tikiuosi, kad mano sėkmė padės kitiems mane labiau mylėti.", type: 'PLEASER' }
+      ]}
+    ];
+
+    let currentQuestionIndex = 0;
+    let scores = { PERFECTIONIST: 0, PROCRASTINATOR: 0, CRITIC: 0, PLEASER: 0 };
+    let answerHistory = [];
+    let copyMsgTimer = null;
+
+    const screenIntro  = document.getElementById('screen-intro');
+    const screenTest   = document.getElementById('screen-test');
+    const screenResult = document.getElementById('screen-result');
+
+    const btnStart   = document.getElementById('btn-start');
+    const btnBack    = document.getElementById('btn-back');
+    const progressBar= document.getElementById('progress-bar');
+
+    const qText   = document.getElementById('question-text');
+    const options = document.getElementById('options');
+
+    const rTitle      = document.getElementById('result-title');
+    const rSecondary  = document.getElementById('result-secondary');
+    const rQuote      = document.getElementById('result-quote');
+    const rPsychology = document.getElementById('result-psychology');
+    const rImpact     = document.getElementById('result-impact');
+    const rReflection = document.getElementById('result-reflection');
+    const rSteps      = document.getElementById('result-steps');
+
+    const btnShare   = document.getElementById('btn-share');
+    const btnRestart = document.getElementById('btn-restart');
+    const copiedMsg  = document.getElementById('copied-msg');
+
+    const emailInput = document.getElementById('email-input');
+    const btnEmail = document.getElementById('btn-email');
+    const emailMsg = document.getElementById('email-msg');
+
+    function setEmailMsg(text, ok=true){
+      emailMsg.textContent = text;
+      emailMsg.classList.remove('hidden');
+      emailMsg.style.color = ok ? '#059669' : 'crimson';
+    }
+
+    function showScreen(name){
+      screenIntro.classList.toggle('hidden', name !== 'intro');
+      screenTest.classList.toggle('hidden', name !== 'test');
+      screenResult.classList.toggle('hidden', name !== 'result');
+    }
+
+    function resetGame(){
+      currentQuestionIndex = 0;
+      scores = { PERFECTIONIST: 0, PROCRASTINATOR: 0, CRITIC: 0, PLEASER: 0 };
+      answerHistory = [];
+      if(emailInput) emailInput.value = '';
+      if(emailMsg) emailMsg.classList.add('hidden');
+      renderQuestion();
+      updateBackButton();
+    }
+
+    function updateBackButton(){
+      btnBack.disabled = currentQuestionIndex === 0;
+    }
+
+    function setProgress(){
+      const pct = ((currentQuestionIndex + 1) / QUESTIONS.length) * 100;
+      progressBar.style.width = pct + '%';
+    }
+
+    function renderQuestion(){
+      const q = QUESTIONS[currentQuestionIndex];
+      qText.textContent = q.text;
+
+      options.innerHTML = '';
+      q.options.forEach((opt) => {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'opt';
+        b.innerHTML = '<div class="dot"></div><span></span>';
+        b.querySelector('span').textContent = opt.text;
+        b.addEventListener('click', () => handleAnswer(opt.type));
+        options.appendChild(b);
+      });
+
+      setProgress();
+      updateBackButton();
+    }
+
+    function handleAnswer(type){
+      scores[type] += 1;
+      answerHistory.push(type);
+
+      if(currentQuestionIndex < QUESTIONS.length - 1){
+        currentQuestionIndex += 1;
+        renderQuestion();
+      } else {
+        showResults();
+      }
+    }
+
+    function handleBack(){
+      if(currentQuestionIndex <= 0) return;
+      const lastType = answerHistory.pop();
+      if(lastType) scores[lastType] -= 1;
+      currentQuestionIndex -= 1;
+      renderQuestion();
+    }
+
+    function getTopTypes(){
+      const sorted = Object.entries(scores).sort((a,b) => b[1] - a[1]);
+      const primary = sorted[0][0];
+      const primaryScore = sorted[0][1];
+      const second = sorted[1][0];
+      const secondScore = sorted[1][1];
+      const secondary = (secondScore > 0 && secondScore >= primaryScore - 1) ? second : null;
+      return { primary, secondary };
+    }
+
+    function showResults(){
+      const { primary, secondary } = getTopTypes();
+      const res = ARCHETYPES[primary];
+      const res2 = secondary ? ARCHETYPES[secondary] : null;
+
+      rTitle.textContent = res.title;
+
+      if(res2){
+        rSecondary.textContent = 'Taip pat pasireiškia: ' + res2.title;
+        rSecondary.classList.remove('hidden');
+      } else {
+        rSecondary.classList.add('hidden');
+      }
+
+      rQuote.textContent = '"' + res.description + '"';
+      rPsychology.textContent = res.psychology;
+      rImpact.textContent = res.dailyImpact;
+      rReflection.textContent = '„' + res.reflection + '“';
+
+      rSteps.innerHTML = '';
+      res.steps.forEach((s, i) => {
+        const row = document.createElement('div');
+        row.className = 'step';
+        row.innerHTML = '<div class="num"></div><div><h4></h4><p></p></div>';
+        row.querySelector('.num').textContent = String(i+1);
+        row.querySelector('h4').textContent = s.title;
+        row.querySelector('p').textContent = s.text;
+        rSteps.appendChild(row);
+      });
+
+      copiedMsg.classList.add('hidden');
+      showScreen('result');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    async function copyToClipboard(text){
+      try{
+        if(navigator.clipboard && navigator.clipboard.writeText){
+          await navigator.clipboard.writeText(text);
+        } else {
+          const ta = document.createElement('textarea');
+          ta.value = text;
+          ta.setAttribute('readonly','');
+          ta.style.position = 'absolute';
+          ta.style.left = '-9999px';
+          document.body.appendChild(ta);
+          ta.select();
+          document.execCommand('copy');
+          document.body.removeChild(ta);
+        }
+        copiedMsg.classList.remove('hidden');
+        clearTimeout(copyMsgTimer);
+        copyMsgTimer = setTimeout(() => copiedMsg.classList.add('hidden'), 2000);
+      } catch(e){
+        console.error('Klaida kopijuojant', e);
+      }
+    }
+
+    async function shareResults(){
+      const { primary } = getTopTypes();
+      const res = ARCHETYPES[primary];
+      const text = 'Atlikau Savęs Sabotažo Testą! Mano tipas: ' + res.title + '. Sužinok savo modelį ir tu!';
+      const url = window.location.href;
+
+      if(navigator.share){
+        try{
+          await navigator.share({ title: 'Savęs Sabotažo Testas', text, url });
+          return;
+        } catch(e){}
+      }
+      await copyToClipboard(text);
+    }
+
+    async function submitEmail(){
+      const email = (emailInput?.value || '').trim();
+      const emailRegex = /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/;
+      if(!emailRegex.test(email)){
+        setEmailMsg('Įvesk teisingą el. paštą.', false);
+        return;
+      }
+
+      const { primary } = getTopTypes();
+
+      btnEmail.disabled = true;
+      btnEmail.textContent = 'Siunčiu…';
+
+      try{
+        const resp = await fetch('/api/subscribe', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, archetype: primary })
+        });
+        const data = await resp.json();
+        if(!resp.ok || !data.ok){
+          setEmailMsg('Nepavyko. Patikrink nustatymus arba bandyk dar kartą.', false);
+        } else {
+          setEmailMsg('Siųsta! Patikrink el. paštą (ir Spam/Promotions).', true);
+        }
+      } catch(e){
+        setEmailMsg('Techninė klaida. Bandyk dar kartą.', false);
+      } finally {
+        btnEmail.disabled = false;
+        btnEmail.textContent = 'Gauti analizę el. paštu';
+      }
+    }
+
+    btnStart.addEventListener('click', () => { resetGame(); showScreen('test'); });
+    btnBack.addEventListener('click', handleBack);
+    btnRestart.addEventListener('click', () => { resetGame(); showScreen('test'); });
+    btnShare.addEventListener('click', shareResults);
+    btnEmail.addEventListener('click', submitEmail);
+
+    showScreen('intro');
+  </script>
+</body>
+</html>
