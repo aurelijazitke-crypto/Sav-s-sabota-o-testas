@@ -708,7 +708,7 @@
 
     async function submitEmail(){
       const email = (emailInput?.value || '').trim();
-      const emailRegex = /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/;
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if(!emailRegex.test(email)){
         setEmailMsg('Įvesk teisingą el. paštą.', false);
         return;
