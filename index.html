@@ -2,6 +2,22 @@
 <html lang="lt">
 <head>
   <meta charset="utf-8" />
+
+  <!-- Meta Pixel Code -->
+  <script>
+  !function(f,b,e,v,n,t,s)
+  {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+  n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+  if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+  n.queue=[];t=b.createElement(e);t.async=!0;
+  t.src=v;s=b.getElementsByTagName(e)[0];
+  s.parentNode.insertBefore(t,s)}(window, document,'script',
+  'https://connect.facebook.net/en_US/fbevents.js');
+  fbq('init', '1863356931044141');
+  fbq('track', 'PageView');
+  </script>
+  <!-- End Meta Pixel Code -->
+
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Savęs Sabotažo Testas</title>
   <meta name="description" content="10 klausimų testas tavo gynybinėms programoms atpažinti." />
@@ -323,6 +339,12 @@
 </head>
 
 <body>
+  <!-- Meta Pixel Noscript -->
+  <noscript><img height="1" width="1" style="display:none"
+  src="https://www.facebook.com/tr?id=1863356931044141&ev=PageView&noscript=1"
+  /></noscript>
+  <!-- End Meta Pixel Noscript -->
+
   <div class="wrap">
     <div class="container">
 
@@ -726,10 +748,15 @@
           body: JSON.stringify({ email, archetype: primary })
         });
         const data = await resp.json();
+
         if(!resp.ok || !data.ok){
           setEmailMsg('Nepavyko. Patikrink nustatymus arba bandyk dar kartą.', false);
         } else {
           setEmailMsg('Siųsta! Patikrink el. paštą (ir Spam/Promotions).', true);
+
+          if (typeof fbq !== 'undefined') {
+            fbq('track', 'Lead');
+          }
         }
       } catch(e){
         setEmailMsg('Techninė klaida. Bandyk dar kartą.', false);
