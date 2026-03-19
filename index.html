@@ -326,6 +326,36 @@
       font-size: 12px;
       margin:0;
     }
+    .consentRow{
+      display:grid;
+      grid-template-columns:18px 1fr;
+      gap:10px;
+      align-items:start;
+      margin-top:12px;
+      padding:12px 14px;
+      border-radius:14px;
+      background:#fff;
+      border:1px solid #e2e8f0;
+    }
+    .consentRow input{
+      margin-top:3px;
+      accent-color:#4f46e5;
+    }
+    .consentRow span{
+      color:#334155;
+      font-size:13px;
+      line-height:1.5;
+      font-weight:700;
+    }
+    .consentRow a{
+      color:#4338ca;
+      font-weight:900;
+      text-decoration:none;
+    }
+    .consentRow a:hover{
+      text-decoration:underline;
+    }
+
     @media (max-width: 520px){
       .p-12{ padding: 34px; }
       .qcard{ padding: 26px; }
@@ -402,8 +432,20 @@
               Įvesk el. paštą ir atsiųsiu išsamesnį paaiškinimą bei kryptį pagal tavo tipą.
             </p>
 
-            <input id="email-input" type="email" placeholder="tavo@email.com"
-              style="width:100%; padding:14px; border-radius:14px; border:1px solid #e2e8f0; font-weight:800; outline:none;" />
+            <input
+              id="email-input"
+              type="email"
+              placeholder="tavo@email.com"
+              style="width:100%; padding:14px; border-radius:14px; border:1px solid #e2e8f0; font-weight:800; outline:none;"
+            />
+
+            <label class="consentRow" for="consent-all">
+              <input id="consent-all" type="checkbox" />
+              <span>
+                Sutinku gauti testo analizę ir naujienas el. paštu bei patvirtinu, kad susipažinau su
+                <a href="privacy.html" target="_blank" rel="noopener noreferrer">privatumo politika</a>.
+              </span>
+            </label>
 
             <button id="btn-email" class="btn btnPrimary" type="button" style="margin-top:10px;">
               Gauti analizę el. paštu
@@ -552,9 +594,9 @@
     const screenTest   = document.getElementById('screen-test');
     const screenResult = document.getElementById('screen-result');
 
-    const btnStart   = document.getElementById('btn-start');
-    const btnBack    = document.getElementById('btn-back');
-    const progressBar= document.getElementById('progress-bar');
+    const btnStart    = document.getElementById('btn-start');
+    const btnBack     = document.getElementById('btn-back');
+    const progressBar = document.getElementById('progress-bar');
 
     const qText   = document.getElementById('question-text');
     const options = document.getElementById('options');
@@ -571,9 +613,10 @@
     const btnRestart = document.getElementById('btn-restart');
     const copiedMsg  = document.getElementById('copied-msg');
 
-    const emailInput = document.getElementById('email-input');
-    const btnEmail = document.getElementById('btn-email');
-    const emailMsg = document.getElementById('email-msg');
+    const emailInput  = document.getElementById('email-input');
+    const btnEmail    = document.getElementById('btn-email');
+    const emailMsg    = document.getElementById('email-msg');
+    const consentAll  = document.getElementById('consent-all');
 
     function setEmailMsg(text, ok=true){
       emailMsg.textContent = text;
@@ -592,6 +635,7 @@
       scores = { PERFECTIONIST: 0, PROCRASTINATOR: 0, CRITIC: 0, PLEASER: 0 };
       answerHistory = [];
       if(emailInput) emailInput.value = '';
+      if(consentAll) consentAll.checked = false;
       if(emailMsg) emailMsg.classList.add('hidden');
       renderQuestion();
       updateBackButton();
@@ -679,7 +723,7 @@
         const row = document.createElement('div');
         row.className = 'step';
         row.innerHTML = '<div class="num"></div><div><h4></h4><p></p></div>';
-        row.querySelector('.num').textContent = String(i+1);
+        row.querySelector('.num').textContent = String(i + 1);
         row.querySelector('h4').textContent = s.title;
         row.querySelector('p').textContent = s.text;
         rSteps.appendChild(row);
@@ -731,8 +775,14 @@
     async function submitEmail(){
       const email = (emailInput?.value || '').trim();
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
       if(!emailRegex.test(email)){
         setEmailMsg('Įvesk teisingą el. paštą.', false);
+        return;
+      }
+
+      if(!consentAll?.checked){
+        setEmailMsg('Pažymėk sutikimą dėl analizės, naujienų ir privatumo politikos.', false);
         return;
       }
 
@@ -745,8 +795,14 @@
         const resp = await fetch('/api/subscribe', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, archetype: primary })
+          body: JSON.stringify({
+            email,
+            archetype: primary,
+            consent_marketing: true,
+            consent_privacy: true
+          })
         });
+
         const data = await resp.json();
 
         if(!resp.ok || !data.ok){
@@ -766,9 +822,18 @@
       }
     }
 
-    btnStart.addEventListener('click', () => { resetGame(); showScreen('test'); });
+    btnStart.addEventListener('click', () => {
+      resetGame();
+      showScreen('test');
+    });
+
     btnBack.addEventListener('click', handleBack);
-    btnRestart.addEventListener('click', () => { resetGame(); showScreen('test'); });
+
+    btnRestart.addEventListener('click', () => {
+      resetGame();
+      showScreen('test');
+    });
+
     btnShare.addEventListener('click', shareResults);
     btnEmail.addEventListener('click', submitEmail);
 
