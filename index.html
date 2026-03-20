@@ -772,72 +772,48 @@
       await copyToClipboard(text);
     }
 
-    async function submitEmail(){
-      const email = (emailInput?.value || '').trim();
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+   async function submitEmail(){
+  const email = (emailInput?.value || '').trim();
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-      if(!emailRegex.test(email)){
-        setEmailMsg('Įvesk teisingą el. paštą.', false);
-        return;
-      }
+  if(!emailRegex.test(email)){
+    setEmailMsg('Įvesk teisingą el. paštą.', false);
+    return;
+  }
 
-      if(!consentAll?.checked){
-        setEmailMsg('Pažymėk sutikimą dėl analizės, naujienų ir privatumo politikos.', false);
-        return;
-      }
+  if(!consentAll?.checked){
+    setEmailMsg('Pažymėk sutikimą dėl analizės, naujienų ir privatumo politikos.', false);
+    return;
+  }
 
-      const { primary } = getTopTypes();
+  const { primary } = getTopTypes();
 
-      btnEmail.disabled = true;
-      btnEmail.textContent = 'Siunčiu…';
+  btnEmail.disabled = true;
+  btnEmail.textContent = 'Siunčiu…';
 
-      try{
-        const resp = await fetch('/api/subscribe', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            email,
-            archetype: primary,
-            consent_marketing: true,
-            consent_privacy: true
-          })
-        });
+  try{
+    const resp = await fetch('/api/subscribe', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email,
+        archetype: primary,
+        consent_marketing: true,
+        consent_privacy: true
+      })
+    });
 
-        const data = await resp.json();
+    const data = await resp.json();
 
-        if(!resp.ok || !data.ok){
-          setEmailMsg('Nepavyko. Patikrink nustatymus arba bandyk dar kartą.', false);
-        } else {
-          setEmailMsg('Siųsta! Patikrink el. paštą (ir Spam/Promotions).', true);
-
-          if (typeof fbq !== 'undefined') {
-            fbq('track', 'Lead');
-          }
-        }
-      } catch(e){
-        setEmailMsg('Techninė klaida. Bandyk dar kartą.', false);
-      } finally {
-        btnEmail.disabled = false;
-        btnEmail.textContent = 'Gauti analizę el. paštu';
-      }
+    if(!resp.ok || !data.ok){
+      setEmailMsg('Nepavyko. Patikrink nustatymus arba bandyk dar kartą.', false);
+    } else {
+      window.location.href = '/thank-you.html';
     }
-
-    btnStart.addEventListener('click', () => {
-      resetGame();
-      showScreen('test');
-    });
-
-    btnBack.addEventListener('click', handleBack);
-
-    btnRestart.addEventListener('click', () => {
-      resetGame();
-      showScreen('test');
-    });
-
-    btnShare.addEventListener('click', shareResults);
-    btnEmail.addEventListener('click', submitEmail);
-
-    showScreen('intro');
-  </script>
-</body>
-</html>
+  } catch(e){
+    setEmailMsg('Techninė klaida. Bandyk dar kartą.', false);
+  } finally {
+    btnEmail.disabled = false;
+    btnEmail.textContent = 'Gauti analizę el. paštu';
+  }
+}
