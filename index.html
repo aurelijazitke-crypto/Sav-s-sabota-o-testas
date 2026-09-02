@@ -2,25 +2,10 @@
 <html lang="lt">
 <head>
   <meta charset="utf-8" />
-
-  <!-- Meta Pixel Code -->
-  <script>
-  !function(f,b,e,v,n,t,s)
-  {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-  n.callMethod.apply(n,arguments):n.queue.push(arguments)};
-  if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
-  n.queue=[];t=b.createElement(e);t.async=!0;
-  t.src=v;s=b.getElementsByTagName(e)[0];
-  s.parentNode.insertBefore(t,s)}(window, document,'script',
-  'https://connect.facebook.net/en_US/fbevents.js');
-  fbq('init', '1863356931044141');
-  fbq('track', 'PageView');
-  </script>
-  <!-- End Meta Pixel Code -->
-
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Savęs Sabotažo Testas</title>
   <meta name="description" content="10 klausimų testas tavo gynybinėms programoms atpažinti." />
+  <link rel="stylesheet" href="/consent.css?v=20260903" />
   <style>
     :root{
       --bg:#f8fafc;
@@ -366,16 +351,11 @@
       .subtitle{ font-size: 16px; }
     }
   </style>
+  <script src="/consent.js?v=20260903" defer></script>
 </head>
 
 <body>
-  <!-- Meta Pixel Noscript -->
-  <noscript><img height="1" width="1" style="display:none"
-  src="https://www.facebook.com/tr?id=1863356931044141&ev=PageView&noscript=1"
-  /></noscript>
-  <!-- End Meta Pixel Noscript -->
-
-  <div class="wrap">
+<div class="wrap">
     <div class="container">
 
       <section id="screen-intro" class="card p-12 center">
@@ -703,6 +683,11 @@
       const { primary, secondary } = getTopTypes();
       const res = ARCHETYPES[primary];
       const res2 = secondary ? ARCHETYPES[secondary] : null;
+      window.azTrack?.('test_complete', {
+        test_name: 'self_sabotage',
+        archetype: primary,
+        secondary_archetype: secondary || 'none'
+      });
 
       rTitle.textContent = res.title;
 
@@ -808,6 +793,7 @@
         if(!resp.ok || !data.ok){
           setEmailMsg('Nepavyko. Patikrink nustatymus arba bandyk dar kartą.', false);
         } else {
+          window.azStorePendingTestLead?.(primary);
           window.location.href = '/thank-you.html';
         }
       } catch(e){
@@ -819,6 +805,7 @@
     }
 
     btnStart.addEventListener('click', () => {
+      window.azTrack?.('test_start', { test_name: 'self_sabotage' });
       resetGame();
       showScreen('test');
     });
@@ -826,6 +813,7 @@
     btnBack.addEventListener('click', handleBack);
 
     btnRestart.addEventListener('click', () => {
+      window.azTrack?.('test_restart', { test_name: 'self_sabotage' });
       resetGame();
       showScreen('test');
     });
@@ -837,3 +825,4 @@
   </script>
 </body>
 </html>
+
