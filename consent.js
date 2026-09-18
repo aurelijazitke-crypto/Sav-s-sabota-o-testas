@@ -110,7 +110,7 @@
       window.fbq(name === 'email_submitted' || name === 'waitlist_signup' ? 'trackSingle' : 'trackSingleCustom', PIXEL, names[name], { funnel: funnel });
     }
   }
-  window.azMeasurement = { track: track, open: function () { panel.querySelector('#az-analytics').checked = preferences.analytics; panel.querySelector('#az-marketing').checked = preferences.marketing; panel.hidden = false; panel.querySelector('button').focus(); } };
+  window.azMeasurement = { track: track, open: function () { panel.hidden = false; panel.querySelector('button').focus(); } };
   window.addEventListener('aurelija:quiz-event', function (event) {
     var name = event.detail?.event;
     track(name === 'lead_submit_success' ? 'email_submitted' : name);
@@ -119,12 +119,12 @@
   style.textContent = '#az-consent{position:fixed;bottom:16px;left:16px;right:16px;max-width:650px;margin:auto;z-index:9999;background:#fffdf9;color:#302332;border:1px solid #c9aec9;border-radius:16px;padding:24px;box-shadow:0 8px 40px #0003;font:16px/1.5 system-ui;max-height:85vh;overflow:auto}#az-consent[hidden]{display:none}#az-consent h2{font:600 22px/1.3 system-ui;margin:0 0 10px}#az-consent p{margin:8px 0}#az-consent .az-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}#az-consent button,#az-settings{font:600 14px system-ui;cursor:pointer;border:1px solid #70536d;border-radius:8px;padding:12px 16px;background:#fffdf9;color:#3e2436}#az-consent button:focus-visible,#az-settings:focus-visible{outline:3px solid #be8a4a;outline-offset:3px}#az-consent label{display:block;margin:8px 0}#az-consent input{appearance:auto;width:18px;height:18px;margin-right:8px}#az-settings{position:fixed;bottom:8px;left:8px;z-index:9998;font-size:12px;padding:8px}';
   document.head.appendChild(style);
   var panel = document.createElement('section'); panel.id = 'az-consent'; panel.setAttribute('aria-label', 'Slapukų pasirinkimai');
-  panel.innerHTML = '<h2>Slapukų pasirinkimai</h2><p>Su tavo sutikimu „Google Analytics“ padės matuoti puslapio naudojimą, o „Meta Pixel“ – veiksmus reklamos rezultatams įvertinti. Testo atsakymų, rezultatų ir el. pašto adresų šioms sistemoms nesiunčiame.</p><p><a href="/privacy.html">Privatumo informacija</a></p><p>Gali atsisakyti ir toliau naudotis puslapiu. Pasirinkimą pakeisi mygtuku „Slapukų nustatymai“.</p><label><input type="checkbox" id="az-analytics">Analitika („Google Analytics“)</label><label><input type="checkbox" id="az-marketing">Reklamos matavimas („Meta“)</label><div class="az-actions"><button type="button" data-choice="all">Sutinku su visais</button><button type="button" data-choice="none">Tik būtini</button><button type="button" data-choice="selected">Išsaugoti pasirinkimą</button></div>';
+  panel.innerHTML = '<h2>Slapukai</h2><p>Naudojame slapukus svetainės lankomumui ir reklamos rezultatams matuoti. Pasirinkus „Tik būtini“, šis matavimas neįjungiamas.</p><p><a href="/privacy.html">Slapukų ir privatumo politika</a></p><div class="az-actions"><button type="button" data-choice="all">Sutinku su visais</button><button type="button" data-choice="none">Tik būtini</button></div>';
   var settings = document.createElement('button'); settings.id = 'az-settings'; settings.type = 'button'; settings.textContent = 'Slapukų nustatymai'; settings.onclick = window.azMeasurement.open;
   document.body.appendChild(settings); document.body.appendChild(panel);
   panel.querySelectorAll('button').forEach(function (button) { button.onclick = function () {
     var choice = button.getAttribute('data-choice');
-    save({ analytics: choice === 'all' || (choice === 'selected' && panel.querySelector('#az-analytics').checked), marketing: choice === 'all' || (choice === 'selected' && panel.querySelector('#az-marketing').checked) });
+    save({ analytics: choice === 'all', marketing: choice === 'all' });
   }; });
   window.azTrack = function (name) {
     var map = { test_start: 'quiz_start', test_restart: 'quiz_start', test_complete: 'quiz_complete' };
@@ -135,7 +135,7 @@
   };
   document.addEventListener('click', function(event) { if (event.target.closest('[data-az-customize]')) window.azMeasurement.open(); });
   var saved = read();
-  if (saved) { panel.hidden = true; panel.querySelector('#az-analytics').checked = saved.analytics; panel.querySelector('#az-marketing').checked = saved.marketing; apply(saved); }
+  if (saved) { panel.hidden = true; apply(saved); }
   if (location.pathname === '/thank-you.html') {
     try {
       var pending = JSON.parse(sessionStorage.getItem('az_measurement_pending_lead') || 'null');
