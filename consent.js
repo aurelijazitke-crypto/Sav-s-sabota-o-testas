@@ -39,7 +39,8 @@
       window.fbq = q; window._fbq = q;
       q('consent', 'grant'); q('set', 'autoConfig', false, PIXEL); q('init', PIXEL);
       script('https://connect.facebook.net/en_US/fbevents.js');
-      // No automatic PageView or form detection: only the four explicit events below.
+      q('trackSingle', PIXEL, 'PageView');
+      // Form conversions are emitted only by explicit success handlers below.
     }
   }
   function read() {
