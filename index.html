@@ -351,10 +351,10 @@
       .subtitle{ font-size: 16px; }
     }
   </style>
-  <script src="/consent.js?v=20260903" defer></script>
+  <script src="/consent.js?v=20260918" defer></script>
 </head>
 
-<body>
+<body data-az-funnel="self_sabotage">
 <div class="wrap">
     <div class="container">
 
@@ -683,11 +683,7 @@
       const { primary, secondary } = getTopTypes();
       const res = ARCHETYPES[primary];
       const res2 = secondary ? ARCHETYPES[secondary] : null;
-      window.azTrack?.('test_complete', {
-        test_name: 'self_sabotage',
-        archetype: primary,
-        secondary_archetype: secondary || 'none'
-      });
+      window.azTrack?.('test_complete');
 
       rTitle.textContent = res.title;
 
@@ -758,6 +754,7 @@
     }
 
     async function submitEmail(){
+      if (btnEmail.disabled) return;
       const email = (emailInput?.value || '').trim();
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -825,4 +822,5 @@
   </script>
 </body>
 </html>
+
 

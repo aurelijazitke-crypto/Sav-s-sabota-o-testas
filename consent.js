@@ -1,307 +1,139 @@
-(() => {
+/* Shared consent-gated measurement. Never send answers, result profiles or contact data. */
+(function () {
   'use strict';
-
-  const GA_ID = 'G-GN34WFFLX2';
-  const META_PIXEL_ID = '1863356931044141';
-  const CONSENT_KEY = 'az_test_consent_v2';
-  const CONSENT_VERSION = 2;
-  const CONSENT_MAX_AGE = 180 * 24 * 60 * 60 * 1000;
-  const DEFAULT_PREFERENCES = Object.freeze({ analytics: false, marketing: false });
-
+  if (window.azMeasurement) return;
+  var GA = 'G-GN34WFFLX2';
+  var PIXEL = '1863356931044141';
+  var KEY = 'az_measurement_v1';
+  var preferences = { analytics: false, marketing: false };
+  var gaLoaded = false, metaLoaded = false, seen = new Set();
+  var funnel = document.querySelector('[data-az-funnel]')?.getAttribute('data-az-funnel') || 'geros_mergaites';
+  var eligible = location.pathname === '/' || location.pathname === '/embed' || location.pathname === '/thank-you.html';
+  var debug = new URLSearchParams(location.search).get('measurement_debug') === '1';
   window.dataLayer = window.dataLayer || [];
-  window.gtag = window.gtag || function gtag() {
-    window.dataLayer.push(arguments);
-  };
-  window.gtag('consent', 'default', {
-    analytics_storage: 'denied',
-    ad_storage: 'denied',
-    ad_user_data: 'denied',
-    ad_personalization: 'denied',
-    functionality_storage: 'denied',
-    personalization_storage: 'denied',
-    security_storage: 'granted',
-    wait_for_update: 500,
-  });
+  window.gtag = window.gtag || function () { window.dataLayer.push(arguments); };
+  var denied = { analytics_storage: 'denied', ad_storage: 'denied', ad_user_data: 'denied', ad_personalization: 'denied' };
+  window.gtag('consent', 'default', denied);
   window.gtag('set', 'ads_data_redaction', true);
-
-  let preferences = { ...DEFAULT_PREFERENCES };
-  let googleTagQueued = false;
-  let metaPixelLoaded = false;
-  let lastFocusedElement = null;
-
-  function normalize(value) {
-    return {
-      analytics: value?.analytics === true,
-      marketing: value?.marketing === true,
-    };
+  function script(src) {
+    var el = document.createElement('script'); el.async = true; el.src = src; document.head.appendChild(el);
   }
-
-  function readConsent() {
-    try {
-      const saved = JSON.parse(localStorage.getItem(CONSENT_KEY) || 'null');
-      if (!saved) return null;
-      if (saved.version !== CONSENT_VERSION) return null;
-      if (Date.now() - Number(saved.updatedAt || 0) >= CONSENT_MAX_AGE) {
-        localStorage.removeItem(CONSENT_KEY);
-        return null;
-      }
-      return normalize(saved.preferences);
-    } catch {
-      return null;
-    }
-  }
-
-  function persistConsent(next) {
-    try {
-      localStorage.setItem(CONSENT_KEY, JSON.stringify({
-        version: CONSENT_VERSION,
-        updatedAt: Date.now(),
-        preferences: normalize(next),
-      }));
-    } catch (error) {
-      console.warn('Nepavyko išsaugoti slapukų pasirinkimo.', error);
-    }
-  }
-
-  function updateGoogleConsent(next) {
-    const analytics = next.analytics ? 'granted' : 'denied';
-    const marketing = next.marketing ? 'granted' : 'denied';
-    window.gtag('consent', 'update', {
-      analytics_storage: analytics,
-      ad_storage: marketing,
-      ad_user_data: marketing,
-      ad_personalization: 'denied',
-      functionality_storage: 'denied',
-      personalization_storage: 'denied',
-      security_storage: 'granted',
-    });
-  }
-
-  function loadGoogleTag() {
-    if (googleTagQueued || (!preferences.analytics && !preferences.marketing)) return;
-    googleTagQueued = true;
-    window.gtag('js', new Date());
-    window.gtag('config', GA_ID, {
-      send_page_view: true,
-      allow_google_signals: false,
-      allow_ad_personalization_signals: false,
-      linker: {
-        domains: ['aurelijazitke.lt', 'sav-s-sabota-o-testas.vercel.app'],
-        accept_incoming: true,
-        decorate_forms: true,
-      },
-      debug_mode: location.hostname === 'localhost',
-    });
-    const script = document.createElement('script');
-    script.async = true;
-    script.src = `https://www.googletagmanager.com/gtag/js?id=${encodeURIComponent(GA_ID)}`;
-    document.head.appendChild(script);
-  }
-
-  function loadMetaPixel() {
-    if (metaPixelLoaded || !preferences.marketing) return;
-    metaPixelLoaded = true;
-    ((factory, documentRef, tagName, source, pixel, firstScript, script) => {
-      if (factory.fbq) return;
-      pixel = factory.fbq = function fbq() {
-        pixel.callMethod ? pixel.callMethod.apply(pixel, arguments) : pixel.queue.push(arguments);
-      };
-      if (!factory._fbq) factory._fbq = pixel;
-      pixel.push = pixel;
-      pixel.loaded = true;
-      pixel.version = '2.0';
-      pixel.queue = [];
-      firstScript = documentRef.getElementsByTagName(tagName)[0];
-      script = documentRef.createElement(tagName);
-      script.async = true;
-      script.src = source;
-      firstScript.parentNode.insertBefore(script, firstScript);
-    })(window, document, 'script', 'https://connect.facebook.net/en_US/fbevents.js');
-    window.fbq('consent', 'grant');
-    window.fbq('init', META_PIXEL_ID);
-    window.fbq('track', 'PageView');
-  }
-
-  function removeMeasurementCookies() {
-    const names = document.cookie
-      .split(';')
-      .map((part) => part.split('=')[0].trim())
-      .filter((name) => name === '_ga' || name.startsWith('_ga_') || name === '_gcl_au' || name === '_fbp' || name === '_fbc');
-    names.forEach((name) => {
-      document.cookie = `${name}=; Max-Age=0; path=/; SameSite=Lax`;
-      document.cookie = `${name}=; Max-Age=0; path=/; domain=.${location.hostname}; SameSite=Lax`;
-    });
-  }
-
-  function track(eventName, parameters = {}) {
-    if (!preferences.analytics && !preferences.marketing) return;
-    loadGoogleTag();
-    window.gtag('event', eventName, {
-      ...parameters,
-      page_path: location.pathname,
-      transport_type: 'beacon',
-    });
-  }
-
-  function trackMeta(eventName, parameters = {}) {
-    if (!preferences.marketing) return;
-    loadMetaPixel();
-    window.fbq?.('track', eventName, parameters);
-  }
-
-  function handlePendingLead() {
-    if (!location.pathname.endsWith('/thank-you.html')) return;
-    let pending = null;
-    try {
-      pending = JSON.parse(sessionStorage.getItem('az_test_signup') || 'null');
-    } catch {}
-    if (!pending) return;
-    if (preferences.analytics || preferences.marketing) {
-      track('sign_up', { method: 'test_email', archetype: pending.archetype || 'unknown' });
-      track('generate_lead', { lead_source: 'self_sabotage_test', archetype: pending.archetype || 'unknown' });
-    }
-    if (preferences.marketing) trackMeta('Lead', { content_name: 'Savęs sabotažo testas' });
-    try {
-      sessionStorage.removeItem('az_test_signup');
-    } catch {}
-  }
-
-  const banner = document.createElement('section');
-  banner.className = 'az-consent-banner';
-  banner.setAttribute('role', 'dialog');
-  banner.setAttribute('aria-labelledby', 'az-consent-title');
-  banner.innerHTML = `
-    <div class="az-consent-copy">
-      <strong id="az-consent-title">Tavo privatumo pasirinkimas</strong>
-      <p>Statistikos ir reklamos rezultatų matavimą įjungsime tik tau leidus. <a href="/privacy.html">Plačiau</a>.</p>
-    </div>
-    <div class="az-consent-actions">
-      <button class="az-consent-button" type="button" data-az-reject>Tik būtini</button>
-      <button class="az-consent-button" type="button" data-az-customize>Pasirinkti</button>
-      <button class="az-consent-button az-consent-button-primary" type="button" data-az-accept>Leisti visus</button>
-    </div>`;
-
-  const layer = document.createElement('div');
-  layer.className = 'az-consent-layer';
-  layer.hidden = true;
-  layer.innerHTML = `
-    <section class="az-consent-modal" role="dialog" aria-modal="true" aria-labelledby="az-modal-title">
-      <button class="az-consent-close" type="button" data-az-close aria-label="Uždaryti slapukų nustatymus">×</button>
-      <h2 id="az-modal-title">Slapukų nustatymai</h2>
-      <p>Pasirinkimą bet kada galėsi pakeisti šio puslapio apačioje.</p>
-      <div class="az-consent-options">
-        <label class="az-consent-option az-consent-option-required">
-          <span><strong>Būtinieji</strong><small>Reikalingi pasirinkimui ir testo veikimui.</small></span>
-          <input type="checkbox" checked disabled aria-label="Būtinieji visada įjungti">
-        </label>
-        <label class="az-consent-option">
-          <span><strong>Statistika</strong><small>„Google Analytics“ padeda matyti testo pradžią, pabaigą ir registracijas.</small></span>
-          <input type="checkbox" data-az-toggle="analytics">
-        </label>
-        <label class="az-consent-option">
-          <span><strong>Reklamos rezultatų matavimas</strong><small>„Google Ads“ ir „Meta Pixel“ padeda įvertinti reklamos rezultatą. „Google“ personalizuotos reklamos signalai išjungti.</small></span>
-          <input type="checkbox" data-az-toggle="marketing">
-        </label>
-      </div>
-      <div class="az-consent-modal-actions">
-        <button class="az-consent-button" type="button" data-az-reject>Tik būtini</button>
-        <button class="az-consent-button az-consent-button-primary" type="button" data-az-save>Išsaugoti pasirinkimą</button>
-      </div>
-      <p class="az-consent-legal"><a href="/privacy.html">Privatumo ir slapukų informacija</a></p>
-    </section>`;
-
-  const settingsButton = document.createElement('button');
-  settingsButton.type = 'button';
-  settingsButton.className = 'az-consent-settings';
-  settingsButton.dataset.azCustomize = '';
-  settingsButton.textContent = 'Slapukų nustatymai';
-
-  document.body.append(banner, layer, settingsButton);
-
-  function syncControls() {
-    layer.querySelectorAll('[data-az-toggle]').forEach((input) => {
-      input.checked = preferences[input.dataset.azToggle] === true;
-    });
-  }
-
-  function openSettings() {
-    lastFocusedElement = document.activeElement;
-    syncControls();
-    layer.hidden = false;
-    document.body.classList.add('az-consent-open');
-    layer.querySelector('[data-az-toggle="analytics"]')?.focus();
-  }
-
-  function closeSettings() {
-    layer.hidden = true;
-    document.body.classList.remove('az-consent-open');
-    lastFocusedElement?.focus?.();
-  }
-
-  function applyPreferences(next, save = true) {
-    const previous = { ...preferences };
-    preferences = normalize(next);
-    if (save) persistConsent(preferences);
-    updateGoogleConsent(preferences);
-    if (preferences.analytics || preferences.marketing) loadGoogleTag();
-    if (preferences.marketing) loadMetaPixel();
-    if ((previous.analytics && !preferences.analytics) || (previous.marketing && !preferences.marketing)) {
-      window.fbq?.('consent', 'revoke');
-      removeMeasurementCookies();
-    }
-    banner.hidden = true;
-    closeSettings();
-    handlePendingLead();
-  }
-
-  const stored = readConsent();
-  if (stored) {
-    preferences = stored;
-    updateGoogleConsent(preferences);
-    if (preferences.analytics || preferences.marketing) loadGoogleTag();
-    if (preferences.marketing) loadMetaPixel();
-    banner.hidden = true;
-    handlePendingLead();
-  } else {
-    banner.hidden = false;
-  }
-
-  document.addEventListener('click', (event) => {
-    const target = event.target.closest('button');
-    if (!target) return;
-    if (target.matches('[data-az-reject]')) {
-      applyPreferences(DEFAULT_PREFERENCES);
-    } else if (target.matches('[data-az-accept]')) {
-      applyPreferences({ analytics: true, marketing: true });
-    } else if (target.matches('[data-az-customize]')) {
-      openSettings();
-    } else if (target.matches('[data-az-close]')) {
-      closeSettings();
-    } else if (target.matches('[data-az-save]')) {
-      const next = {};
-      layer.querySelectorAll('[data-az-toggle]').forEach((input) => {
-        next[input.dataset.azToggle] = input.checked;
+  function cleanLocation() { return location.origin + location.pathname; }
+  function loadTags() {
+    if (!eligible) return;
+    if (preferences.analytics && !gaLoaded) {
+      gaLoaded = true;
+      window.gtag('js', new Date());
+      window.gtag('config', GA, {
+        send_page_view: false, allow_google_signals: false, allow_ad_personalization_signals: false,
+        page_location: cleanLocation(), page_referrer: '', page_title: funnel !== 'waitlist' ? 'Testas' : 'Laukiančiųjų sąrašas',
+        ...(debug ? { debug_mode: true } : {})
       });
-      applyPreferences(next);
+      window.gtag('event', 'page_view', { send_to: GA, page_location: cleanLocation(), page_referrer: '' });
+      script('https://www.googletagmanager.com/gtag/js?id=' + GA);
     }
-  });
-
-  layer.addEventListener('click', (event) => {
-    if (event.target === layer) closeSettings();
-  });
-  document.addEventListener('keydown', (event) => {
-    if (event.key === 'Escape' && !layer.hidden) closeSettings();
-  });
-
-  window.azTrack = track;
-  window.azTrackMeta = trackMeta;
-  window.azStorePendingTestLead = (archetype) => {
+    if (preferences.marketing && !metaLoaded) {
+      metaLoaded = true;
+      var q = function () { if (q.callMethod) q.callMethod.apply(q, arguments); else q.queue.push(arguments); };
+      q.queue = []; q.push = q; q.loaded = true; q.version = '2.0';
+      window.fbq = q; window._fbq = q;
+      q('consent', 'grant'); q('set', 'autoConfig', false, PIXEL); q('init', PIXEL);
+      script('https://connect.facebook.net/en_US/fbevents.js');
+      // No automatic PageView or form detection: only the four explicit events below.
+    }
+  }
+  function read() {
     try {
-      sessionStorage.setItem('az_test_signup', JSON.stringify({ archetype, createdAt: Date.now() }));
-    } catch {}
-  };
-  window.azConsent = Object.freeze({
-    openSettings,
-    getConsent: () => ({ ...preferences }),
+      var value = document.cookie.split('; ').find(function (x) { return x.startsWith(KEY + '='); });
+      if (!value) return null;
+      var saved = JSON.parse(decodeURIComponent(value.slice(KEY.length + 1)));
+      return typeof saved.analytics === 'boolean' && typeof saved.marketing === 'boolean' ? saved : null;
+    } catch { return null; }
+  }
+  function apply(next) {
+    preferences = next;
+    window['ga-disable-' + GA] = !next.analytics;
+    window.gtag('consent', 'update', {
+      analytics_storage: next.analytics ? 'granted' : 'denied',
+      ad_storage: next.marketing ? 'granted' : 'denied',
+      ad_user_data: next.marketing ? 'granted' : 'denied',
+      ad_personalization: 'denied'
+    });
+    if (window.fbq) window.fbq('consent', next.marketing ? 'grant' : 'revoke');
+    loadTags();
+  }
+  function clearCookies() {
+    document.cookie.split(';').forEach(function (item) {
+      var name = item.split('=')[0].trim();
+      if (!/^(_ga|_gid|_gat|_gcl|_fbp|_fbc)/.test(name)) return;
+      ['', location.hostname, '.aurelijazitke.lt'].forEach(function (domain) {
+        document.cookie = name + '=;Max-Age=0;Path=/' + (domain ? ';Domain=' + domain : '') + ';SameSite=Lax';
+      });
+    });
+  }
+  function save(next) {
+    var revoked = (preferences.analytics && !next.analytics) || (preferences.marketing && !next.marketing);
+    var domain = /(^|\.)aurelijazitke\.lt$/.test(location.hostname) ? ';Domain=.aurelijazitke.lt' : '';
+    document.cookie = KEY + '=' + encodeURIComponent(JSON.stringify(next)) + ';Max-Age=15552000;Path=/;SameSite=Lax' + domain + (location.protocol === 'https:' ? ';Secure' : '');
+    if (revoked) {
+      preferences = next;
+      window['ga-disable-' + GA] = true;
+      if (window.fbq) window.fbq('consent', 'revoke');
+      clearCookies();
+      location.reload();
+      return;
+    }
+    apply(next); panel.hidden = true; settings.focus();
+  }
+  function track(name) {
+    if (!eligible || !['quiz_start', 'quiz_complete', 'email_submitted', 'waitlist_signup'].includes(name)) return;
+    // Do not queue actions performed before consent; a later opt-in is not retroactive.
+    if (preferences.analytics && !seen.has('ga:' + name)) {
+      seen.add('ga:' + name);
+      window.gtag('event', name, { send_to: GA, funnel: funnel, page_location: cleanLocation(), page_referrer: '', ...(debug ? {debug_mode: true} : {}) });
+    }
+    if (preferences.marketing && !seen.has('meta:' + name)) {
+      seen.add('meta:' + name);
+      var names = { quiz_start: 'QuizStart', quiz_complete: 'QuizComplete', email_submitted: 'Lead', waitlist_signup: 'CompleteRegistration' };
+      window.fbq(name === 'email_submitted' || name === 'waitlist_signup' ? 'trackSingle' : 'trackSingleCustom', PIXEL, names[name], { funnel: funnel });
+    }
+  }
+  window.azMeasurement = { track: track, open: function () { panel.querySelector('#az-analytics').checked = preferences.analytics; panel.querySelector('#az-marketing').checked = preferences.marketing; panel.hidden = false; panel.querySelector('button').focus(); } };
+  window.addEventListener('aurelija:quiz-event', function (event) {
+    var name = event.detail?.event;
+    track(name === 'lead_submit_success' ? 'email_submitted' : name);
   });
+  var style = document.createElement('style');
+  style.textContent = '#az-consent{position:fixed;bottom:16px;left:16px;right:16px;max-width:650px;margin:auto;z-index:9999;background:#fffdf9;color:#302332;border:1px solid #c9aec9;border-radius:16px;padding:24px;box-shadow:0 8px 40px #0003;font:16px/1.5 system-ui;max-height:85vh;overflow:auto}#az-consent[hidden]{display:none}#az-consent h2{font:600 22px/1.3 system-ui;margin:0 0 10px}#az-consent p{margin:8px 0}#az-consent .az-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}#az-consent button,#az-settings{font:600 14px system-ui;cursor:pointer;border:1px solid #70536d;border-radius:8px;padding:12px 16px;background:#fffdf9;color:#3e2436}#az-consent button:focus-visible,#az-settings:focus-visible{outline:3px solid #be8a4a;outline-offset:3px}#az-consent label{display:block;margin:8px 0}#az-consent input{appearance:auto;width:18px;height:18px;margin-right:8px}#az-settings{position:fixed;bottom:8px;left:8px;z-index:9998;font-size:12px;padding:8px}';
+  document.head.appendChild(style);
+  var panel = document.createElement('section'); panel.id = 'az-consent'; panel.setAttribute('aria-label', 'Slapukų pasirinkimai');
+  panel.innerHTML = '<h2>Slapukų pasirinkimai</h2><p>Su tavo sutikimu „Google Analytics“ padės matuoti puslapio naudojimą, o „Meta Pixel“ – veiksmus reklamos rezultatams įvertinti. Testo atsakymų, rezultatų ir el. pašto adresų šioms sistemoms nesiunčiame.</p><p><a href="/privacy.html">Privatumo informacija</a></p><p>Gali atsisakyti ir toliau naudotis puslapiu. Pasirinkimą pakeisi mygtuku „Slapukų nustatymai“.</p><label><input type="checkbox" id="az-analytics">Analitika („Google Analytics“)</label><label><input type="checkbox" id="az-marketing">Reklamos matavimas („Meta“)</label><div class="az-actions"><button type="button" data-choice="all">Sutinku su visais</button><button type="button" data-choice="none">Tik būtini</button><button type="button" data-choice="selected">Išsaugoti pasirinkimą</button></div>';
+  var settings = document.createElement('button'); settings.id = 'az-settings'; settings.type = 'button'; settings.textContent = 'Slapukų nustatymai'; settings.onclick = window.azMeasurement.open;
+  document.body.appendChild(settings); document.body.appendChild(panel);
+  panel.querySelectorAll('button').forEach(function (button) { button.onclick = function () {
+    var choice = button.getAttribute('data-choice');
+    save({ analytics: choice === 'all' || (choice === 'selected' && panel.querySelector('#az-analytics').checked), marketing: choice === 'all' || (choice === 'selected' && panel.querySelector('#az-marketing').checked) });
+  }; });
+  window.azTrack = function (name) {
+    var map = { test_start: 'quiz_start', test_restart: 'quiz_start', test_complete: 'quiz_complete' };
+    if (map[name]) track(map[name]);
+  };
+  window.azStorePendingTestLead = function () {
+    try { sessionStorage.setItem('az_measurement_pending_lead', JSON.stringify({ at: Date.now(), analytics: preferences.analytics, marketing: preferences.marketing })); } catch {}
+  };
+  document.addEventListener('click', function(event) { if (event.target.closest('[data-az-customize]')) window.azMeasurement.open(); });
+  var saved = read();
+  if (saved) { panel.hidden = true; panel.querySelector('#az-analytics').checked = saved.analytics; panel.querySelector('#az-marketing').checked = saved.marketing; apply(saved); }
+  if (location.pathname === '/thank-you.html') {
+    try {
+      var pending = JSON.parse(sessionStorage.getItem('az_measurement_pending_lead') || 'null');
+      sessionStorage.removeItem('az_measurement_pending_lead');
+      sessionStorage.removeItem('az_test_signup');
+      if (pending && Date.now() - pending.at < 120000) {
+        var current = preferences;
+        preferences = { analytics: current.analytics && pending.analytics, marketing: current.marketing && pending.marketing };
+        track('email_submitted'); preferences = current;
+      }
+    } catch {}
+  }
 })();
