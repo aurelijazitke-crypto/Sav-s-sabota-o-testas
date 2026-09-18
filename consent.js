@@ -18,6 +18,17 @@
   function script(src) {
     var el = document.createElement('script'); el.async = true; el.src = src; document.head.appendChild(el);
   }
+
+  function sourceReferrer() { try { return document.referrer ? new URL(document.referrer).origin + '/' : ''; } catch { return ''; } }
+  function campaignFields() {
+    var params = new URLSearchParams(location.search), fields = {};
+    var map = { utm_source: 'campaign_source', utm_medium: 'campaign_medium', utm_campaign: 'campaign_name', utm_content: 'campaign_content', utm_id: 'campaign_id', utm_term: 'campaign_term' };
+    Object.keys(map).forEach(function(key) {
+      var value = params.get(key);
+      if (value && /^[a-zA-Z0-9_. -]{1,120}$/.test(value)) fields[map[key]] = value;
+    });
+    return fields;
+  }
   function cleanLocation() { return location.origin + location.pathname; }
   function loadTags() {
     if (!eligible) return;
@@ -25,11 +36,11 @@
       gaLoaded = true;
       window.gtag('js', new Date());
       window.gtag('config', GA, {
-        send_page_view: false, allow_google_signals: false, allow_ad_personalization_signals: false,
-        page_location: cleanLocation(), page_referrer: '', page_title: funnel !== 'waitlist' ? 'Testas' : 'Laukiančiųjų sąrašas',
+        send_page_view: false, content_group: funnel, ...campaignFields(), linker: { domains: ['aurelijazitke.lt', 'testas.aurelijazitke.lt', 'daugiau.aurelijazitke.lt', 'geros-mergaites-testas.vercel.app', 'sav-s-sabota-o-testas.vercel.app'], accept_incoming: true }, allow_google_signals: false, allow_ad_personalization_signals: false,
+        page_location: cleanLocation(), page_referrer: sourceReferrer(), page_title: funnel !== 'waitlist' ? 'Testas' : 'Laukiančiųjų sąrašas',
         ...(debug ? { debug_mode: true } : {})
       });
-      window.gtag('event', 'page_view', { send_to: GA, page_location: cleanLocation(), page_referrer: '' });
+      window.gtag('event', 'page_view', { send_to: GA, page_location: cleanLocation(), page_referrer: sourceReferrer() });
       script('https://www.googletagmanager.com/gtag/js?id=' + GA);
     }
     if (preferences.marketing && !metaLoaded) {
@@ -91,7 +102,7 @@
     // Do not queue actions performed before consent; a later opt-in is not retroactive.
     if (preferences.analytics && !seen.has('ga:' + name)) {
       seen.add('ga:' + name);
-      window.gtag('event', name, { send_to: GA, funnel: funnel, page_location: cleanLocation(), page_referrer: '', ...(debug ? {debug_mode: true} : {}) });
+      window.gtag('event', name, { send_to: GA, funnel: funnel, page_location: cleanLocation(), page_referrer: sourceReferrer(), ...(debug ? {debug_mode: true} : {}) });
     }
     if (preferences.marketing && !seen.has('meta:' + name)) {
       seen.add('meta:' + name);
